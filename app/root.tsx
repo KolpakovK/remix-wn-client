@@ -7,6 +7,9 @@ import {
 } from "@remix-run/react";
 import "./tailwind.css";
 
+
+import '@fontsource-variable/inter';
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">

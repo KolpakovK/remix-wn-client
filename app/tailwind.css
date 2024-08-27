@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+  
+@layer components{
+    .rich-editor h1{
+        @apply text-4xl text-gray-900;
+    }
+
+    .rich-editor h2{
+        @apply text-3xl text-gray-900;
+    }
+
+    .rich-editor h3{
+        @apply text-2xl text-gray-900;
+    }
+
+    .rich-editor ul{
+        @apply pl-6 list-disc;
+    }
+}
