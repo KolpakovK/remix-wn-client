@@ -7,11 +7,26 @@ import { useSubmit, useActionData } from "@remix-run/react";
 
 import { ReactNode, useState, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
 
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import { Terminal } from "lucide-react";
 
-export default function QuizeBlock(){
+function getInitials(fullName: string): string {
+    if (!fullName) {
+      return '';
+    }
+  
+    const words = fullName.split(' ');
+  
+    const initials = words
+      .map(word => word.charAt(0).toUpperCase())
+      .join('');
+  
+    return initials;
+}
+
+export default function InterviewBlock(){
     const submit = useSubmit();
 
     const action_data:any = useActionData()
@@ -29,23 +44,28 @@ export default function QuizeBlock(){
 
     const [editorErros,setEditorErrors]:any = useState(null)
 
-    const [questions,setQuestions]:any = useState([])
+    const [messages,setMessages]:any = useState([])
 
     const [author,setAuthor] = useState("");
+    const [guest,setGuest] = useState("");
     const [title,setTitle] = useState("");
 
     useEffect( () => {
+        let htmlStart = `
+        <p>Представитель Weazel News - ${author}</p>
+        <p>Гость - ${guest}</p>
+        `
         let html = "";
         let raw = "";
 
-        questions.forEach( (question:any) => {
-            html+= `<p><b>${question.title}</b></p><p>${question.answers.join('<br/>')}</p>`
-            raw+= `${question.title} ${question.answers.join(' ')}`
+        messages.forEach( (message:any) => {
+            html+= `<p><b>${message.owner=="WN" ? "[WN]: " : `[${getInitials(guest)}]:` }</b> ${ message.text }</p>`
+            raw+= `${message.text}`
         });
 
         setRawEditorFullText(rawEditorStartText+raw+rawEditorEndText);
-        setEditorFullText(editorStartText+html+editorEndText);
-    }, [editorStartText,editorEndText,rawEditorStartText,rawEditorEndText,questions] )
+        setEditorFullText(htmlStart+editorStartText+html+editorEndText);
+    }, [editorStartText,editorEndText,rawEditorStartText,rawEditorEndText,messages] )
 
     function downloadFile(){
         submit({type:"download",content:editorFullText},{ method:"POST" });
@@ -55,57 +75,31 @@ export default function QuizeBlock(){
         submit({type:"check",content:rawEditorFullText},{ method:"POST" });
     }
 
-    function addQuestion(){
-        let allQuestions:any = questions;
+    function addMessage(owner:string){
+        let allMessages:any = messages;
 
-        allQuestions.push({
-            title:"",
-            answers:[
-                ""
-            ]
+        allMessages.push({
+            owner:owner,
+            text:""
         })
 
-        setQuestions([...allQuestions]);
+        setMessages([...allMessages]);
     }
 
-    function deleteQuestion(index:number){
-        let allQuestions:any = questions;
+    function deleteMessage(index:number){
+        let allMessages:any = messages;
 
-        allQuestions.splice(index, 1);
+        allMessages.splice(index, 1);
 
-        setQuestions([...allQuestions]);
+        setMessages([...allMessages]);
     }
 
-    function setQuestionTitle(index:number,value:string){
-        let allQuestions:any[] = questions;
+    function setMessage(index:number,value:string){
+        let allMessages:any = messages;
 
-        allQuestions[index].title = value;
+        allMessages[index].text = value;
 
-        setQuestions([...allQuestions]);
-    }
-
-    function addAnswer(index:number){
-        let allQuestions:any = questions;
-
-        allQuestions[index].answers.push("")
-
-        setQuestions([...allQuestions]);
-    }
-
-    function deleteQuestionAnswer(index:number,answerIndex:number){
-        let allQuestions:any = questions;
-
-        allQuestions[index].answers.splice(answerIndex, 1);
-
-        setQuestions([...allQuestions]);
-    }
-
-    function setQuestionAnswer(index:number,answerIndex:number,value:string){
-        let allQuestions:any[] = questions;
-
-        allQuestions[index].answers[answerIndex] = value;
-
-        setQuestions([...allQuestions]);
+        setMessages([...allMessages]);
     }
 
     useEffect( () => {
@@ -144,12 +138,19 @@ export default function QuizeBlock(){
                             <Label>Автор</Label>
                             <Input type="text" name="author" onChange={ (e:any) => setAuthor(e.target.value) }/>
                         </div>
-
-                        {/* Title */}
+                        
+                        {/* Guest */}
                         <div className="flex flex-1 flex-col gap-2">
-                            <Label>Название работы</Label>
-                            <Input type="text" name="name" onChange={ (e:any) => setTitle(e.target.value) }/>
+                            <Label>Гость</Label>
+                            <Input type="text" name="guest" onChange={ (e:any) => setGuest(e.target.value) }/>
                         </div>
+                        
+                    </div>
+
+                    {/* Title */}
+                    <div className="flex flex-1 flex-col gap-2">
+                        <Label>Название работы</Label>
+                        <Input type="text" name="name" onChange={ (e:any) => setTitle(e.target.value) }/>
                     </div>
 
                     <div className="flex flex-1 flex-col gap-2">
@@ -160,27 +161,20 @@ export default function QuizeBlock(){
                     <div className="flex flex-1 flex-col gap-2">
                         <Label>Вопросы</Label>
                         <div className="flex flex-col gap-4">
-                            {questions.map( (question:any,index:number) => (
-                                <div key={index} className="flex flex-col lg:flex-row gap-4">
-                                    <div className="lg:flex-1 flex gap-2">
-                                        <Input type="text" placeholder="Ваш вопрос" onChange={ (e:any) => setQuestionTitle(index,e.target.value) }/>
-                                        <Button variant={"destructive"} className=" rounded-md" onClick={ () => deleteQuestion(index) }>Удалить</Button>
-                                    </div>
-                                    <div className="flex flex-col gap-4 lg:flex-1 w-full">
-
-                                        {question.answers.map( (answer:any,answerIndex:number) => (
-                                            <div key={answerIndex} className="flex gap-2">
-                                                <Input type="text" placeholder="Ваш ответ" onChange={ (e:any) => setQuestionAnswer(index,answerIndex,e.target.value) }/>
-                                                <Button variant={"destructive"} className=" rounded-md" onClick={ () => deleteQuestionAnswer(index,answerIndex) }>Удалить</Button>
-                                            </div>
-                                        ))}
-
-                                        <Button variant={"ghost"} onClick={ () => addAnswer(index) }>Добавить ответ</Button>
+                            {messages.map( (message:any,index:number) => (
+                                <div key={index} className="flex flex-col gap-2">
+                                    <p className=" text-sm text-slate-500">{message.owner=="WN" ? "[WN]: " : `[${getInitials(guest)}]:` }</p>
+                                    <div className="lg:flex-1 flex gap-2 items-end">
+                                        <Textarea placeholder="Реплика" onChange={ (e:any) => setMessage(index,e.target.value) }/>
+                                        <Button variant={"destructive"} className=" rounded-md" onClick={ () => deleteMessage(index) }>Удалить</Button>
                                     </div>
                                 </div>
                             ) )}
                         </div>
-                        <Button variant={"outline"} onClick={ () => addQuestion() }>Добавить вопрос</Button>
+                        <div className="flex gap-2">
+                            <Button variant={"outline"} onClick={ () => addMessage("WN") }>Добавить WN</Button>
+                            <Button variant={"outline"} onClick={ () => addMessage("GUEST") }>Добавить Guest</Button>
+                        </div>
                     </div>
 
                     <div className="flex flex-1 flex-col gap-2">

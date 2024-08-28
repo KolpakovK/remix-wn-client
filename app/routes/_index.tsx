@@ -15,6 +15,7 @@ import ArticleBlock from "~/components/misc/article";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, } from "~/components/ui/alert-dialog"
 import QuizeBlock from "~/components/misc/quize";
+import InterviewBlock from "~/components/misc/interview";
 
 
 export const meta: MetaFunction = () => {
@@ -189,6 +190,10 @@ export default function Index() {
 
                 {selectedWork=="quize" && (
                     <QuizeBlock/>
+                )}
+
+                {selectedWork=="interview" && (
+                    <InterviewBlock/>
                 )}
             </div>
         </div>
